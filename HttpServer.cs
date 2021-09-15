@@ -87,6 +87,12 @@ class HttpServer {
         #endregion
     };
   private Thread _serverThread;
+
+
+  private static IDictionary<string, string> _contentEncodingMappings = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase) {
+    {".gz", "gzip"},
+  };
+
   private string _rootDirectory;
   private HttpListener _listener;
   private int _port;
@@ -163,10 +169,19 @@ class HttpServer {
 
         //Adding permanent http response headers
         string mime;
-        context.Response.ContentType = _mimeTypeMappings.TryGetValue(Path.GetExtension(filename), out mime) ? mime : "application/octet-stream";
+        context.Response.ContentType = "application/octet-stream";
+        foreach (var elem in _mimeTypeMappings) {
+          if (filename.EndsWith(elem.Key)) {
+            context.Response.ContentType = elem.Value;
+            break;
+          }
+        }
         context.Response.ContentLength64 = input.Length;
         context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
         context.Response.AddHeader("Last-Modified", System.IO.File.GetLastWriteTime(filename).ToString("r"));
+        if (_contentEncodingMappings.TryGetValue(Path.GetExtension(filename), out var encoding)) {
+          context.Response.AddHeader("Content-Encoding", encoding);
+        }
 
         byte[] buffer = new byte[ 1024 * 16 ];
         int nbytes;
