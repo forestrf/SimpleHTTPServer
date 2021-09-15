@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Net;
 using System.IO;
 using System.Threading;
+using System.Web;
 
 class HttpServer {
   private readonly string[] _indexFiles = {
@@ -82,6 +83,7 @@ class HttpServer {
         {".xml", "text/xml"},
         {".xpi", "application/x-xpinstall"},
         {".zip", "application/zip"},
+        {".wasm.gz", "application/wasm"},
         #endregion
     };
   private Thread _serverThread;
@@ -140,6 +142,7 @@ class HttpServer {
 
   private void Process (HttpListenerContext context) {
     string filename = context.Request.Url.AbsolutePath;
+    filename = HttpUtility.UrlDecode(filename);
     Console.WriteLine(filename);
     filename = filename.Substring(1);
 
