@@ -191,8 +191,31 @@ class HttpServer {
 
         context.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
       }
+    }
+    else if (Directory.Exists(filename)) {
+      filename = Path.GetFullPath(filename + "/");
+      // List folders and files
+      using (var writer = new StreamWriter(context.Response.OutputStream)) {
+        var folders = Directory.GetDirectories(filename);
+        var files = Directory.GetFiles(filename);
 
-    } else {
+        writer.Write("<h2>Folders</h2>");
+        if (filename != _rootDirectory) {
+          writer.Write("<a href=\"/..\">..</a><br>");
+        }
+        foreach (var elem in folders) {
+          var relativeUri = new Uri(filename).MakeRelativeUri(new Uri(elem + "/"));
+          writer.Write("<a href=\"{0}\">{1}</a><br>", relativeUri, HttpUtility.HtmlEncode(HttpUtility.UrlDecode(relativeUri.ToString())));
+        }
+
+        writer.Write("<h2>Files</h2>");
+        foreach (var elem in files) {
+          var relativeUri = new Uri(filename).MakeRelativeUri(new Uri(elem));
+          writer.Write("<a href=\"{0}\">{1}</a><br>", relativeUri, HttpUtility.HtmlEncode(HttpUtility.UrlDecode(relativeUri.ToString())));
+        }
+      }
+    }
+    else {
       context.Response.StatusCode = (int) HttpStatusCode.NotFound;
     }
 
