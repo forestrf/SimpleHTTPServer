@@ -85,7 +85,7 @@ class HttpServer {
         {".xml", "text/xml"},
         {".xpi", "application/x-xpinstall"},
         {".zip", "application/zip"},
-        {".wasm.gz", "application/wasm"},
+        {".wasm", "application/wasm"},
         #endregion
     };
   private Thread _serverThread;
