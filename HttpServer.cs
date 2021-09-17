@@ -8,6 +8,8 @@ using System.Net;
 using System.IO;
 using System.Threading;
 using System.Web;
+using System.Net.NetworkInformation;
+using System.Linq;
 
 class HttpServer {
   private readonly string[] _indexFiles = {
@@ -107,21 +109,15 @@ class HttpServer {
   /// </summary>
   /// <param name="path">Directory path to serve.</param>
   /// <param name="port">Port of the server.</param>
-  public HttpServer (string path, int port) {
+  public HttpServer (string path, int port = 8000) {
+    port = GetOpenPort(port);
     this.Initialize(path, port);
   }
 
-  /// <summary>
-  /// Construct server with suitable port.
-  /// </summary>
-  /// <param name="path">Directory path to serve.</param>
-  public HttpServer (string path) {
-    //get an empty port
-    TcpListener l = new TcpListener(IPAddress.Loopback, 0);
-    l.Start();
-    int port = ( (IPEndPoint) l.LocalEndpoint ).Port;
-    l.Stop();
-    this.Initialize(path, port);
+  public static int GetOpenPort(int startPort = 2555) {
+    var usedPorts = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().Select(p => p.Port).ToList();
+    int unusedPort = Enumerable.Range(startPort, 999).Where(port => !usedPorts.Contains(port)).FirstOrDefault();
+    return unusedPort;
   }
 
   /// <summary>
@@ -168,7 +164,6 @@ class HttpServer {
         Stream input = new FileStream(filename, FileMode.Open);
 
         //Adding permanent http response headers
-        string mime;
         context.Response.ContentType = "application/octet-stream";
         foreach (var elem in _mimeTypeMappings) {
           if (filename.EndsWith(elem.Key)) {
