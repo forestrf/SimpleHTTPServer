@@ -211,7 +211,7 @@ class HttpServer {
 
         writer.Write("<h2>Folders</h2>");
         if (filename != _rootDirectory) {
-          writer.Write("<a href=\"/..\">..</a><br>");
+          writer.Write("<a href=\"../\">../</a><br>");
         }
         foreach (var elem in folders) {
           var relativeUri = new Uri(filename).MakeRelativeUri(new Uri(elem + "/"));
