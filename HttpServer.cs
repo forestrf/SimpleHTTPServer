@@ -159,7 +159,18 @@ class HttpServer {
 
     filename = Path.Combine(_rootDirectory, filename);
 
-    if (File.Exists(filename)) {
+    bool isValidPath;
+    try {
+      isValidPath = new Uri(_rootDirectory).IsBaseOf(new Uri(filename));
+    }
+    catch (Exception) {
+      isValidPath = false;
+    }
+
+    if (!isValidPath) {
+      context.Response.StatusCode = (int) HttpStatusCode.Forbidden;
+	}
+    else if (File.Exists(filename)) {
       try {
         Stream input = new FileStream(filename, FileMode.Open);
 
