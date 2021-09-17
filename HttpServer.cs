@@ -172,28 +172,27 @@ class HttpServer {
 	}
     else if (File.Exists(filename)) {
       try {
-        Stream input = new FileStream(filename, FileMode.Open);
-
-        //Adding permanent http response headers
-        context.Response.ContentType = "application/octet-stream";
-        foreach (var elem in _mimeTypeMappings) {
-          if (filename.EndsWith(elem.Key)) {
-            context.Response.ContentType = elem.Value;
-            break;
+        using (Stream input = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) {
+          //Adding permanent http response headers
+          context.Response.ContentType = "application/octet-stream";
+          foreach (var elem in _mimeTypeMappings) {
+            if (filename.EndsWith(elem.Key)) {
+              context.Response.ContentType = elem.Value;
+              break;
+            }
           }
+          context.Response.ContentLength64 = input.Length;
+          context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
+          context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(filename).ToString("r"));
+          if (_contentEncodingMappings.TryGetValue(Path.GetExtension(filename), out var encoding)) {
+            context.Response.AddHeader("Content-Encoding", encoding);
+          }
+          
+          byte[] buffer = new byte[ 1024 * 16 ];
+          int nbytes;
+          while (( nbytes = input.Read(buffer, 0, buffer.Length) ) > 0)
+            context.Response.OutputStream.Write(buffer, 0, nbytes);
         }
-        context.Response.ContentLength64 = input.Length;
-        context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
-        context.Response.AddHeader("Last-Modified", System.IO.File.GetLastWriteTime(filename).ToString("r"));
-        if (_contentEncodingMappings.TryGetValue(Path.GetExtension(filename), out var encoding)) {
-          context.Response.AddHeader("Content-Encoding", encoding);
-        }
-
-        byte[] buffer = new byte[ 1024 * 16 ];
-        int nbytes;
-        while (( nbytes = input.Read(buffer, 0, buffer.Length) ) > 0)
-          context.Response.OutputStream.Write(buffer, 0, nbytes);
-        input.Close();
 
         context.Response.StatusCode = (int) HttpStatusCode.OK;
         context.Response.OutputStream.Flush();
