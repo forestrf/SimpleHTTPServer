@@ -2,12 +2,11 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.IO;
-using System.Reflection;
 
 namespace SimpleHTTPServer {
   class Program {
     static void Main (string[] args) {
-      string folder = AppDomain.CurrentDomain.BaseDirectory;
+      string folder = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
       Console.WriteLine("Using folder {0}", folder);
 
       HttpServer myServer = new HttpServer(folder, 8084);
